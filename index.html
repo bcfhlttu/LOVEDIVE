@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang = ko>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나랑 가장 닮은 IVE 멤버는?</title>
+</head>
+<body>
+    <div>
+        <h1>인닮</h1>
+        <h3>나랑 가장 닮은 IVE 멤버는?</h3>
+    </div>>
+    
+<div id = "upload-area">
+    <span>📷</span>
+    <br />
+    <span>사진을 업로드 해 주세요! 얼굴 비중이 높을수록 정확도는 올라갑니다!</span>
+    <input id="upload-input" style="display: none;" type="file" accept="image/*" onchange="readFile(this.files[0]);" />
+</div>
+<div id="loading-area" style="display: none;">
+    <span>인공지능이 숨참고 LOVE DIVE중...</span>
+</div>>
+<div id="result-area" style="display: none;">
+    <img id="upload-image" src="#" alt="your image" />
+    <div id='label-container'></div>
+</div>
+
+<div id="retry-area" style="display: none;">
+    <span>다른 사진으로 한번더??</span>>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+<script type="text/javascript">
+    const URL = "https://teachablemachine.withgoogle.com/models/cCsjWzuG6/";
+
+    let model, labelContainer, maxPredictions;
+    let isModelReady = false;
+    let input = document.getElementById("upload-input");
+    let image = document.getElementById("upload-image");
+    let uploadArea = document.getElementById("upload-area");
+    let loadingArea = document.getElementById("loading-area");
+    let resultArea = document.getElementById("result-area");
+    let retryArea = document.getElementById("retry-area");
+    const reader = new FileReader();
+    async function readFile(file) {
+        uploadArea.style.display = "none";
+        if (isModelReady === false) {
+            loadingArea.style.display = "block";
+            await init();
+        }
+        
+        reader.readAsDataURL(file);
+    }
+
+    reader.onload = async function(event) {
+        await image.setAttribute('src' , event.target.result);
+        await predict();
+        loadingArea.style.display = "none";
+        resultArea.style.display = "block";
+        retryArea.style.display = "block";
+    };
+
+    uploadArea.onclick =  function() {
+        input.click();
+    }
+
+    uploadArea.ondragover = function(event) {
+        event.preventDefault();
+    }
+
+    uploadArea.ondrop = function(event) {
+        event.preventDefault();
+        const file = event.dataTransfer.files[0];
+        readFile(file);
+    }
+
+    retryArea.onclick = function() {
+        retryArea.style.display = "none";
+        resultArea.style.display = "none";
+        uploadArea.style.display = "block";
+        input.value = "";
+    }
+
+        async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+       
+        labelContainer = document.getElementById("label-container");
+        for (let i = 0; i < maxPredictions + 1; i++) { 
+            labelContainer.appendChild(document.createElement("div"));
+        }
+    }
+
+    
+    async function predict() {
+        
+        const prediction = await model.predict(image);
+        
+        prediction.sort((x, y) => y.probability - x.probability);
+
+        switch (prediction[0].className) {
+            case "리즈":
+                labelContainer.childNodes[0].innerHTML = "<h3>나와 닮은 IVE 멤버는 리즈입니다! 금발을 한다고 해서 리즈가 더 잘 나오진 않아요!</h3>";
+                break;
+
+            case "이서":
+                labelContainer.childNodes[0].innerHTML = "<h3>나와 닮은 IVE 멤버는 이서입니다! 얼빡샷을 찍어도 이서가 더 잘 나오진 않아요!</h3>";
+                break;
+
+            case "원영":
+                labelContainer.childNodes[0].innerHTML = "<h3>나와 닮은 IVE 멤버는 원영입니다! 원영이필터를 쓴다고 원영이가 더 잘 나오진 않아요!</h3>";
+                break;
+            
+            case "가을":
+                labelContainer.childNodes[0].innerHTML = "<h3>나와 닮은 IVE 멤버는 가을입니다! 아는 후배가 많아도 가을이가 더 잘 나오진 않아요!</h3>";
+                break;
+
+            case "유진":
+                labelContainer.childNodes[0].innerHTML = "<h3>나와 닮은 IVE 멤버는 유진입니다! 강아지 사진을 찍어도 유진이가 더 잘 나오진 않아요!</h3>";
+                break;
+
+            case "레이":
+                labelContainer.childNodes[0].innerHTML = "<h3>나와 닮은 IVE 멤버는 레이입니다! 갸루피스를 해봐도 레이가 더 잘 나오진 않아요!</h3>";
+                break;
+
+            default:
+                labelContainer.childNodes[0].innerHTML = "<h3>오류발생</h3>";
+                break;
+        }
+
+        for (let i = 0; i < maxPredictions; i++) {
+            const classPrediction =
+                prediction[i].className + ": " + Math.round(prediction[i].probability * 100) + "%";
+            labelContainer.childNodes[i+1].innerHTML = classPrediction;
+        }
+        isModelReady = true;    
+    }
+</script>
+
+    
+
+</body>
+</html>
