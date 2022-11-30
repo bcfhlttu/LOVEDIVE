@@ -105,6 +105,7 @@
         const prediction = await model.predict(image);
         
         prediction.sort((x, y) => y.probability - x.probability);
+        
 
         switch (prediction[0].className) {
 
